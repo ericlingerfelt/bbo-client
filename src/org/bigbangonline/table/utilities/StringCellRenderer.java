@@ -1,0 +1,52 @@
+package org.bigbangonline.table.utilities;
+
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.table.*;
+import org.bigbangonline.format.Fonts;
+
+/**
+ * The Class StringCellRenderer.
+ */
+public class StringCellRenderer extends JLabel implements TableCellRenderer{
+	
+	/** The model. */
+	private DefaultTableModel model;
+	
+	/**
+	 * Instantiates a new string cell renderer.
+	 *
+	 * @param model the model
+	 */
+	public StringCellRenderer(DefaultTableModel model){
+		this.model = model;
+		setOpaque(true);
+	}
+	
+	/* (non-Javadoc)
+	 * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(javax.swing.JTable, java.lang.Object, boolean, boolean, int, int)
+	 */
+	public Component getTableCellRendererComponent(JTable table
+    												, Object object
+    												, boolean isSelected
+    												, boolean hasFocus
+    												, int row
+    												, int column){
+		
+
+    	setText(object.toString());
+    	setHorizontalAlignment(SwingConstants.LEFT);															
+    	setFont(Fonts.textFont);
+    	setBackground(Color.white);
+    	setForeground(Color.black);
+    	if(isSelected && hasFocus){
+    		setBackground(table.getSelectionBackground());
+    	}
+    	if(!model.isCellEditable(row, column)){
+    		setBackground(new Color(204, 204, 204));
+    	}
+    	return this;												
+   		
+    }
+
+}

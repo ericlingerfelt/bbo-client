@@ -1,0 +1,178 @@
+package org.bigbangonline.rate.ratelibman;
+
+import javax.swing.*;
+import java.awt.event.*;
+import java.util.*;
+import info.clearthought.layout.*;
+import org.bigbangonline.io.CGICom;
+import org.bigbangonline.datastructure.MainDataStructure;
+import org.bigbangonline.datastructure.rate.RateLibManDataStructure;
+import org.bigbangonline.datastructure.rate.RateLibDataStructure;
+import org.bigbangonline.dialogs.CautionDialog;
+import org.bigbangonline.dialogs.GeneralDialog;
+import org.bigbangonline.format.Fonts;
+import org.bigbangonline.format.SizedComboBox;
+
+/**
+ * The Class RateLibManDeletePanel.
+ */
+public class RateLibManDeletePanel extends JPanel implements ActionListener{
+	
+	/** The ds. */
+	private RateLibManDataStructure ds;
+	
+	/** The mds. */
+	private MainDataStructure mds;
+	
+	/** The cgi com. */
+	private CGICom cgiCom;
+	
+	/** The frame. */
+	private RateLibManFrame frame;
+	
+	/** The delete button. */
+	private JButton deleteButton;
+	
+	/** The rate lib combo box. */
+	private SizedComboBox rateLibComboBox;
+	
+	/** The rate lib model. */
+	private DefaultComboBoxModel rateLibModel;
+	
+	/** The rate lib label. */
+	private JLabel topLabel, rateLibLabel;
+	
+	/** The layout. */
+	private TableLayout layout;
+	
+	/** The caution dialog. */
+	private CautionDialog cautionDialog;
+	
+	/** The panel. */
+	private JPanel panel;
+	
+	/**
+	 * Instantiates a new rate lib man delete panel.
+	 *
+	 * @param mds the mds
+	 * @param ds the ds
+	 * @param cgiCom the cgi com
+	 * @param frame the frame
+	 */
+	public RateLibManDeletePanel(MainDataStructure mds, RateLibManDataStructure ds, CGICom cgiCom, RateLibManFrame frame){
+	
+		this.mds = mds;
+		this.ds = ds;
+		this.cgiCom = cgiCom;
+		this.frame = frame;
+	
+		double gap = 20;
+		double[] column = {TableLayoutConstants.FILL};
+		double[] row = {gap, TableLayoutConstants.PREFERRED, 50, TableLayoutConstants.PREFERRED, gap, TableLayoutConstants.PREFERRED, gap};
+		layout = new TableLayout(column, row);
+		
+		setLayout(layout);
+
+		topLabel = new JLabel("<html>With the Delete Library tool, you can delete a library from your User storage folder.</html>");
+		
+		rateLibLabel = new JLabel("Library to delete : ");
+		rateLibLabel.setFont(Fonts.textFont);
+		
+		rateLibModel = new DefaultComboBoxModel();
+		rateLibComboBox = new SizedComboBox(rateLibModel);
+		rateLibComboBox.setFont(Fonts.textFont);
+		
+		panel = new JPanel();
+		panel.add(rateLibLabel);
+		panel.add(rateLibComboBox);
+		
+		deleteButton = new JButton("Delete Selected Library");
+		deleteButton.setFont(Fonts.buttonFont);
+		deleteButton.addActionListener(this);
+
+		add(topLabel, "0, 1, c, c");
+		add(panel, "0, 3, c, c");
+		add(deleteButton, "0, 5, c, c");
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
+	public void actionPerformed(ActionEvent ae){
+		
+		if(cautionDialog!=null){
+			if(ae.getSource()==cautionDialog.getYesButton()){
+				ds.setPath(((RateLibDataStructure)rateLibModel.getSelectedItem()).getPath() 
+								+ ((RateLibDataStructure)rateLibModel.getSelectedItem()).getName());
+				
+				if(cgiCom.doCGICall(mds, ds, CGICom.ERASE_LIBRARY, frame)){
+					cautionDialog.setVisible(false);
+					cautionDialog.dispose();
+					if(cgiCom.doCGICall(mds, ds, CGICom.GET_RATE_LIBRARY_LIST, frame)){}
+					setCurrentState();
+					
+					GeneralDialog dialog = new GeneralDialog(frame, ds.getEraseRateLibReport(), "Library Deleted");
+					dialog.setVisible(true);
+				}
+				
+			}else if(ae.getSource()==cautionDialog.getNoButton()){
+				cautionDialog.setVisible(false);
+				cautionDialog.dispose();
+			}
+		}
+		
+		if(ae.getSource()==deleteButton){
+			String string = "You are about to delete the library " 
+								+ ((RateLibDataStructure)rateLibModel.getSelectedItem()).toString()
+								+ ". Do you wish to continue?";
+			cautionDialog = new CautionDialog(frame, this, string, "Caution!");
+			cautionDialog.setVisible(true);
+		}
+		
+	}
+
+	
+	/**
+	 * Sets the current state.
+	 */
+	public void setCurrentState(){
+
+		ds.getRateLibDataStructureVector().trimToSize();
+		
+		panel.removeAll();
+		panel.add(rateLibLabel);
+		
+		if(ds.getRateLibDataStructureVector().size()>0){
+			
+			rateLibModel.removeAllElements();
+			Iterator<RateLibDataStructure> itr = ds.getRateLibDataStructureVector().iterator();
+			while(itr.hasNext()){
+				rateLibModel.addElement(itr.next());
+			}
+			rateLibComboBox.setPopupWidthToLongest();
+			rateLibLabel.setText("Observation to delete : ");
+			panel.add(rateLibComboBox);
+			add(deleteButton, "0, 5, c, c");
+			
+		}else{
+			
+			remove(deleteButton);
+			rateLibLabel.setText("There are no libraries in your User storage folder to delete.");
+			
+		}
+		
+		repaint();
+		validate();
+		
+	}
+	
+	/**
+	 * Gets the current state.
+	 *
+	 * @return the current state
+	 */
+	public void getCurrentState(){}
+	
+}
+
