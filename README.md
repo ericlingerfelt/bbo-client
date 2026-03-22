@@ -1,1 +1,1 @@
-# bbo-client
+Big Bang Online Client
